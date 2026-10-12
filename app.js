@@ -2,20 +2,20 @@ const API_KEY = '843bf643f30d8b0ad4d1856b270139f7';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
-const seriesGrid    = document.getElementById('series-grid');
-const loadingDiv    = document.getElementById('loading');
-const errorDiv      = document.getElementById('error');
-const errorMessage  = document.getElementById('error-message');
+const seriesGrid    = document.getElementById('series-grid');//utilizado
+const loadingDiv    = document.getElementById('loading');//utilizado
+const errorDiv      = document.getElementById('error');//utilizado
+const errorMessage  = document.getElementById('error-message'); //utilizado
 const resultsTitle  = document.getElementById('results-title'); //utilizado
 const resultsCount  = document.getElementById('results-count'); //utilizado
 const searchInput   = document.getElementById('search'); //utilizado
-const clearBtn      = document.getElementById('clear-search');
-const retryBtn      = document.getElementById('retry-btn');
+const clearBtn      = document.getElementById('clear-search');//utilizado
+const retryBtn      = document.getElementById('retry-btn');//utilizado
 const themeToggle   = document.getElementById('theme-toggle');
-const modal         = document.getElementById('serie-modal');
-const modalBody     = document.getElementById('modal-body');
-const modalClose    = document.getElementById('modal-close');
-const modalOverlay  = document.getElementById('modal-overlay');
+const modal         = document.getElementById('serie-modal');//utilizado
+const modalBody     = document.getElementById('modal-body'); //utilizado
+const modalClose    = document.getElementById('modal-close');//utilizado
+const modalOverlay  = document.getElementById('modal-overlay');//utilizado
 
 
 // ============================================================================
@@ -93,11 +93,11 @@ const probarSeries = async () => {
 const crearTarjetaSerie = (serie) => {
     const { poster_path, name, first_air_date, vote_average } = serie;
     const año = first_air_date? first_air_date.split('-')[0]:'N/A';
-    const imagen = poster_path?`${IMAGE_URL}${poster_path}`: 'Error en la carga de la imagen';
+    const imagen = poster_path?`${IMAGE_URL}${poster_path}`: '';
     const rating = vote_average?vote_average.toFixed(1):'N/A';
 
     return `
-        <article class="serie-card">
+        <article class="serie-card" data-id="${serie.id}">
             <div class="serie-card__poster">
                 <img class="serie-card__image" src="${imagen}" alt="${name}">
                 <span class="serie-card__rating">★ ${rating}</span>
@@ -169,6 +169,7 @@ searchInput.addEventListener('input', async () => {
         ocultarLoading();
     } catch (error) {
         console.error('Error al buscar series:', error);
+        let mensaje = 'No se pudieron encontrar las series';
         if (error.message.includes('401')) {
             mensaje = 'API Key invAlida';
         } else if (error.message.includes('fetch')) {
@@ -177,4 +178,67 @@ searchInput.addEventListener('input', async () => {
         mostrarError(mensaje);
     }
 });
+
+const obtenerDetallesSerie = async (id) => {
+    const url = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=es-ES`;
+    const respuesta = await fetch(url);
+
+    if (!respuesta.ok) {
+        throw new Error(`Error HTTP ${respuesta.status}`);
+    }
+    const serie = await respuesta.json();
+    return serie;
+};
+
+const mostrarDetallesSerie = (serie) => {
+    const generos = serie.genres.length > 0 ? serie.genres.map(genero => genero.name).join(', '):'No disponible';
+    modalBody.innerHTML = `
+        <div class="serie-detalle">
+            <div class="serie-detalle__contenido">
+                <p>
+                    <strong>Sinopsis:</strong>
+                    ${serie.overview}
+                </p>
+                <p>
+                    <strong>Temporadas:</strong>
+                    ${serie.number_of_seasons}
+                </p>
+                <p>
+                    <strong>Episodios:</strong>
+                    ${serie.number_of_episodes}
+                </p>
+                <p>
+                    <strong>Géneros:</strong>
+                    ${generos}
+                </p>
+                <p>
+                    <strong>Estado:</strong>
+                    ${serie.status}
+                </p>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'block';
+};
+
+seriesGrid.addEventListener('click', async (event) => {
+    const tarjeta = event.target.closest('.serie-card');
+    const id = tarjeta.getAttribute('data-id');
+    try {
+        const serie = await obtenerDetallesSerie(id);
+        mostrarDetallesSerie(serie);
+    } catch (error) {
+        console.error('Error al obtener los detalles:', error);
+        alert('No se pudieron cargar los detalles de la serie.');
+    }
+});
+
+
+const cerrarModal = () => {
+    modal.style.display = 'none';
+};
+
+modalClose.addEventListener('click', cerrarModal);
+modalOverlay.addEventListener('click', cerrarModal);
+
 cargarSeriesPopulares();
