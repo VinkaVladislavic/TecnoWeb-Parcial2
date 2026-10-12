@@ -130,7 +130,7 @@ const buscarSeries = async (consulta) => {
     const url = `${BASE_URL}/search/tv?api_key=${API_KEY}&language=es-ES&query=${encodeURIComponent(consulta)}`;
     const respuesta = await fetch(url);
     if (!respuesta.ok) {
-        throw new Error(`Error en la consulta`,error);
+        throw new Error(`Error en la consulta`);
     }
     const datos = await respuesta.json();
     return datos.results;
@@ -143,10 +143,15 @@ const mostrarSeries = (series) => {
 
 const cargarSeriesPopulares = async () => {
     mostrarLoading();
-    const series = await obtenerSeriesPopulares();
-    mostrarSeries(series);
-    resultsTitle.textContent = 'Series Populares';
-    ocultarLoading();
+    try {
+        const series = await obtenerSeriesPopulares();
+        mostrarSeries(series);
+        resultsTitle.textContent = 'Series Populares';
+        ocultarLoading();
+    } catch (error) {
+        console.error('Error al cargar series populares:', error);
+        mostrarError(error.message);
+    }
 };
 
 clearBtn.addEventListener('click', async () => {
@@ -154,4 +159,22 @@ clearBtn.addEventListener('click', async () => {
     await cargarSeriesPopulares();
 });
 
+searchInput.addEventListener('input', async () => {
+    const consulta = searchInput.value.trim();
+    mostrarLoading();
+    try {
+        const series = await buscarSeries(consulta);
+        mostrarSeries(series);
+        resultsTitle.textContent = 'Resultados';
+        ocultarLoading();
+    } catch (error) {
+        console.error('Error al buscar series:', error);
+        if (error.message.includes('401')) {
+            mensaje = 'API Key invAlida';
+        } else if (error.message.includes('fetch')) {
+            mensaje = 'Error de red';
+        }
+        mostrarError(mensaje);
+    }
+});
 cargarSeriesPopulares();
