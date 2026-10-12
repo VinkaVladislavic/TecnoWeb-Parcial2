@@ -1,4 +1,4 @@
-const API_KEY = 'TU_API_KEY_AQUI'; 
+const API_KEY = '843bf643f30d8b0ad4d1856b270139f7'; 
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -25,7 +25,7 @@ const mostrarLoading = () => {
     loadingDiv.style.display = 'flex';
     errorDiv.style.display = 'none';
     seriesGrid.innerHTML = '';
-};
+}
 
 const ocultarLoading = () => {
     loadingDiv.style.display = 'none';
@@ -67,3 +67,24 @@ cargarTema();
 // #                          TU CÓDIGO AQUÍ                    #
 // #                                                                          #
 // ############################################################################
+
+    
+const obtenerSeriesPopulares = async() => {
+    const url = `${BASE_URL}/tv/popular?api_key=${API_KEY}&language=es-ES`;
+    const respuesta = await fetch(url);
+    if (!respuesta.ok) {
+        throw new Error(`Error en la consulta`);
+    }
+    const datos = await respuesta.json();
+    return datos.results;
+}   
+
+const probarSeries = async () => {
+    try {
+        const series = await obtenerSeriesPopulares();
+        console.log(series);
+    } catch (error) {
+        console.error('Error al obtener las series:', error);
+    }
+};
+probarSeries();
