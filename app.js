@@ -6,9 +6,9 @@ const seriesGrid    = document.getElementById('series-grid');
 const loadingDiv    = document.getElementById('loading');
 const errorDiv      = document.getElementById('error');
 const errorMessage  = document.getElementById('error-message');
-const resultsTitle  = document.getElementById('results-title');
-const resultsCount  = document.getElementById('results-count');
-const searchInput   = document.getElementById('search');
+const resultsTitle  = document.getElementById('results-title'); //utilizado
+const resultsCount  = document.getElementById('results-count'); //utilizado
+const searchInput   = document.getElementById('search'); //utilizado
 const clearBtn      = document.getElementById('clear-search');
 const retryBtn      = document.getElementById('retry-btn');
 const themeToggle   = document.getElementById('theme-toggle');
@@ -125,3 +125,33 @@ const probarTarjeta = async () => {
 };
 probarTarjeta(); // pruebas previas en consola
 
+
+const buscarSeries = async (consulta) => {
+    const url = `${BASE_URL}/search/tv?api_key=${API_KEY}&language=es-ES&query=${encodeURIComponent(consulta)}`;
+    const respuesta = await fetch(url);
+    if (!respuesta.ok) {
+        throw new Error(`Error en la consulta`,error);
+    }
+    const datos = await respuesta.json();
+    return datos.results;
+};
+
+const mostrarSeries = (series) => {
+    seriesGrid.innerHTML = series.map(crearTarjetaSerie).join('');
+    resultsCount.textContent = `${series.length} resultados`;
+};
+
+const cargarSeriesPopulares = async () => {
+    mostrarLoading();
+    const series = await obtenerSeriesPopulares();
+    mostrarSeries(series);
+    resultsTitle.textContent = 'Series Populares';
+    ocultarLoading();
+};
+
+clearBtn.addEventListener('click', async () => {
+    searchInput.value = '';
+    await cargarSeriesPopulares();
+});
+
+cargarSeriesPopulares();
